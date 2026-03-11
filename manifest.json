@@ -1,22 +1,35 @@
 {
-  "name": "차계부",
+  "name": "차계부 - 내 차량 관리",
   "short_name": "차계부",
-  "description": "내 차량 관리 앱",
-  "start_url": "/chaegyebu/",
+  "description": "내 차량 주유·정비·운행 기록을 한눈에 관리하는 차계부 앱",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0d0f14",
-  "theme_color": "#1F3864",
-  "orientation": "portrait",
+  "theme_color": "#0d0f14",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "categories": ["utilities", "lifestyle"],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "주유 기록 추가",
+      "short_name": "주유",
+      "url": "./index.html",
+      "description": "주유 기록 빠르게 추가"
     }
   ]
 }
