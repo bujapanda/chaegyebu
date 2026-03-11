@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>차계부</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #161920;
+  --surface2: #1e2230;
+  --surface3: #252a3a;
+  --border: #2a3048;
+  --accent: #4f8ef7;
+  --accent2: #7c6af7;
+  --green: #34d399;
+  --orange: #fb923c;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --text: #e8eaf0;
+  --text2: #8b92a8;
+  --text3: #4a5270;
+  --card-radius: 16px;
+  --font: 'Noto Sans KR', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+
+/* ── Layout ── */
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+#content { flex: 1; overflow-y: auto; padding: 16px 16px 80px; scroll-behavior: smooth; }
+#content::-webkit-scrollbar { display: none; }
+
+/* ── Bottom Nav ── */
+#nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+  background: rgba(22,25,32,0.95); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; background: none; border: none; cursor: pointer;
+  color: var(--text3); transition: color .2s; font-family: var(--font);
+  font-size: 10px; font-weight: 500; letter-spacing: .3px;
+}
+.nav-btn .icon { font-size: 20px; line-height: 1; transition: transform .2s; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn.active .icon { transform: translateY(-1px); }
+
+/* ── Page ── */
+.page { display: none; }
+.page.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Header ── */
+.page-header { margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--card-radius); padding: 16px; margin-bottom: 12px;
+}
+.card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+/* ── KPI Grid ── */
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--card-radius); padding: 14px;
+  position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.kpi-card.blue::before  { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.kpi-card.green::before { background: linear-gradient(90deg, var(--green), #059669); }
+.kpi-card.orange::before{ background: linear-gradient(90deg, var(--orange), #ef4444); }
+.kpi-card.purple::before{ background: linear-gradient(90deg, var(--accent2), #a855f7); }
+.kpi-label { font-size: 10px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.kpi-value { font-size: 20px; font-weight: 700; font-family: var(--mono); letter-spacing: -.5px; }
+.kpi-unit  { font-size: 11px; color: var(--text2); margin-left: 2px; font-family: var(--font); }
+
+/* ── List items ── */
+.list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.list-item:last-child { border-bottom: none; padding-bottom: 0; }
+.item-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.item-icon.fuel   { background: rgba(79,142,247,.15); }
+.item-icon.repair { background: rgba(52,211,153,.15); }
+.item-icon.other  { background: rgba(251,146,60,.15); }
+.item-body { flex: 1; min-width: 0; }
+.item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.item-amount { font-family: var(--mono); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.item-amount.neg { color: var(--red); }
+.item-amount.pos { color: var(--green); }
+
+/* ── Forms ── */
+.form-section { margin-bottom: 20px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; color: var(--text);
+  font-family: var(--font); font-size: 14px; outline: none;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-select { cursor: pointer; }
+.form-select option { background: var(--surface2); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 13px 20px; border-radius: 12px; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 14px; font-weight: 600; transition: all .2s;
+  display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+}
+.btn-primary { background: var(--accent); color: white; width: 100%; }
+.btn-primary:active { transform: scale(.98); opacity: .9; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid rgba(248,113,113,.3); }
+.btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+
+/* ── Tab switcher ── */
+.tabs { display: flex; background: var(--surface2); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+.tab-btn {
+  flex: 1; padding: 8px; border: none; background: none; cursor: pointer;
+  color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 600;
+  border-radius: 9px; transition: all .2s;
+}
+.tab-btn.active { background: var(--surface3); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* ── Chart container ── */
+.chart-wrap { position: relative; height: 200px; }
+
+/* ── Car selector ── */
+.car-selector {
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px;
+  scrollbar-width: none;
+}
+.car-selector::-webkit-scrollbar { display: none; }
+.car-chip {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 600;
+  color: var(--text2); transition: all .2s; white-space: nowrap;
+}
+.car-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,.1); }
+
+/* ── Modals ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  z-index: 200; align-items: flex-end; padding: 0;
+}
+.modal-overlay.open { display: flex; animation: fadeIn .2s; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal {
+  width: 100%; background: var(--surface); border-radius: 24px 24px 0 0;
+  padding: 20px 16px 32px; max-height: 92vh; overflow-y: auto;
+  animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+.modal::-webkit-scrollbar { display: none; }
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+
+/* ── Badge ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.badge-blue   { background: rgba(79,142,247,.2);  color: var(--accent); }
+.badge-green  { background: rgba(52,211,153,.2);  color: var(--green); }
+.badge-orange { background: rgba(251,146,60,.2);  color: var(--orange); }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: .5; }
+.empty-text { color: var(--text2); font-size: 13px; line-height: 1.6; }
+
+/* ── FAB ── */
+.fab {
+  position: fixed; bottom: 76px; right: 16px;
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; cursor: pointer; font-size: 22px; color: white;
+  box-shadow: 0 4px 20px rgba(79,142,247,.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s; z-index: 99;
+}
+.fab:active { transform: scale(.92); }
+
+/* ── Progress bar ── */
+.progress-bar { background: var(--surface3); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+
+/* ── Delete btn in list ── */
+.delete-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; color: var(--text3); opacity: 0; transition: opacity .2s; }
+.list-item:hover .delete-btn { opacity: 1; }
+.list-item .delete-btn { opacity: .4; }
+
+/* ── Car info grid ── */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.info-item { background: var(--surface2); border-radius: 10px; padding: 12px; }
+.info-item-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+.info-item-value { font-size: 13px; font-weight: 600; }
+
+/* ── Stat bar ── */
+.stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.stat-label { font-size: 12px; color: var(--text2); width: 80px; flex-shrink: 0; }
+.stat-bar-wrap { flex: 1; }
+.stat-val { font-size: 12px; font-family: var(--mono); font-weight: 600; width: 60px; text-align: right; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* scroll hint */
+.scroll-hint { text-align: center; font-size: 11px; color: var(--text3); padding: 8px 0 0; }
+
+/* ── Emoji picker ── */
+.emoji-pick-btn {
+  flex: 1; min-width: 56px; padding: 10px 4px;
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 12px; cursor: pointer; text-align: center;
+  font-size: 22px; line-height: 1.2; color: var(--text2);
+  transition: all .18s; font-family: var(--font);
+}
+.emoji-pick-btn div { font-size: 9px; margin-top: 3px; font-weight: 600; letter-spacing: .3px; }
+.emoji-pick-btn:hover  { border-color: var(--accent); background: rgba(79,142,247,.08); }
+.emoji-pick-btn.active { border-color: var(--accent); background: rgba(79,142,247,.15); color: var(--text); }
+
+/* ── Waypoints ── */
+.waypoint-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.wp-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.wp-dot.start { background: var(--green); }
+.wp-dot.via   { background: var(--orange); }
+.wp-dot.end   { background: var(--red); }
+.waypoint-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.wp-remove {
+  background: none; border: none; cursor: pointer; color: var(--text3);
+  font-size: 20px; line-height: 1; padding: 2px 6px; flex-shrink: 0; transition: color .2s;
+}
+.wp-remove:hover { color: var(--red); }
+.wp-connector-wrap { display: flex; flex-direction: column; align-items: center; width: 10px; flex-shrink: 0; }
+.wp-connector { width: 2px; height: 12px; background: var(--border); }
+
+/* Drive route full display */
+.drive-route-full { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.drive-route-stop { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
+.route-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.route-dot.start { background: var(--green); }
+.route-dot.via   { background: var(--orange); }
+.route-dot.end   { background: var(--red); }
+.route-seg { display: flex; align-items: center; padding-left: 3px; }
+.route-seg-line { width: 2px; height: 10px; background: var(--border); }
+
+/* ── Drive log ── */
+.drive-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--card-radius); padding: 14px; margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.drive-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+}
+.drive-card.purpose-업무::before  { background: var(--accent); }
+.drive-card.purpose-출퇴근::before { background: var(--green); }
+.drive-card.purpose-개인::before  { background: var(--orange); }
+.drive-card.purpose-기타::before  { background: var(--text3); }
+.drive-route {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; margin-bottom: 6px;
+}
+.drive-arrow { color: var(--text3); font-size: 12px; }
+.drive-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+.drive-meta-item { font-size: 11px; color: var(--text2); }
+.drive-km { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent); }
+.purpose-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 10px; font-weight: 700;
+}
+.purpose-업무  { background:rgba(79,142,247,.2);  color:var(--accent); }
+.purpose-출퇴근{ background:rgba(52,211,153,.2);  color:var(--green); }
+.purpose-개인  { background:rgba(251,146,60,.2);  color:var(--orange); }
+.purpose-기타  { background:rgba(139,146,168,.2); color:var(--text2); }
+.drive-month-header {
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 12px 0 6px; margin-top: 4px;
+}
+.drive-month-summary {
+  display: flex; gap: 12px; padding: 10px 12px;
+  background: var(--surface2); border-radius: 10px;
+  margin-bottom: 10px;
+}
+.drive-month-stat { flex: 1; text-align: center; }
+.drive-month-stat .val { font-size: 14px; font-weight: 700; font-family: var(--mono); }
+.drive-month-stat .lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="content">
+
+    <!-- ══ 대시보드 ══ -->
+    <div id="page-dash" class="page active">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">대시보드 🚗</div>
+          <div class="page-sub" id="dash-date"></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--text2)">선택 차량</div>
+          <div id="dash-car-name" style="font-size:13px;font-weight:600;color:var(--accent)">-</div>
+        </div>
+      </div>
+      <!-- Car chips -->
+      <div class="car-selector" id="dash-car-chips"></div>
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-label">⛽ 이번달 주유비</div>
+          <div class="kpi-value" id="kpi-fuel">0<span class="kpi-unit">원</span></div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">📍 평균 연비</div>
+          <div class="kpi-value" id="kpi-kmpl">-<span class="kpi-unit">km/L</span></div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-label">🔧 이번달 정비비</div>
+          <div class="kpi-value" id="kpi-repair">0<span class="kpi-unit">원</span></div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">💰 총 지출 (올해)</div>
+          <div class="kpi-value" id="kpi-total">0<span class="kpi-unit">원</span></div>
+        </div>
+      </div>
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-title">📊 월별 지출 추이</div>
+        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+      <!-- Recent -->
+      <div class="card">
+        <div class="card-title">🕐 최근 기록</div>
+        <div id="recent-list"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">아직 기록이 없어요</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ 주유 기록 ══ -->
+    <div id="page-fuel" class="page">
+      <div class="page-header">
+        <div class="page-title">⛽ 주유 기록</div>
+        <div class="page-sub">연비는 자동으로 계산됩니다</div>
+      </div>
+      <div class="car-selector" id="fuel-car-chips"></div>
+      <!-- Summary -->
+      <div class="kpi-grid" style="margin-bottom:12px">
+        <div class="kpi-card blue" style="grid-column:1/3">
+          <div style="display:flex;justify-content:space-between">
+            <div><div class="kpi-label">📈 평균 연비</div><div class="kpi-value" id="fuel-avg-kmpl">-<span class="kpi-unit">km/L</span></div></div>
+            <div style="text-align:right"><div class="kpi-label">💧 총 주유량</div><div class="kpi-value" id="fuel-total-liter">0<span class="kpi-unit">L</span></div></div>
+            <div style="text-align:right"><div class="kpi-label">💸 총 주유비</div><div class="kpi-value" id="fuel-total-cost">0<span class="kpi-unit">원</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">주유 내역</div>
+        <div id="fuel-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ 정비 기록 ══ -->
+    <div id="page-repair" class="page">
+      <div class="page-header">
+        <div class="page-title">🔧 정비 기록</div>
+        <div class="page-sub">정비·수리·기타 비용 관리</div>
+      </div>
+      <div class="car-selector" id="repair-car-chips"></div>
+      <div class="tabs" id="repair-tabs">
+        <button class="tab-btn active" onclick="switchRepairTab('repair')">🔧 정비·수리</button>
+        <button class="tab-btn" onclick="switchRepairTab('other')">💳 기타비용</button>
+      </div>
+      <div id="repair-list-wrap"></div>
+    </div>
+
+    <!-- ══ 통계 ══ -->
+    <div id="page-stat" class="page">
+      <div class="page-header">
+        <div class="page-title">📊 통계</div>
+        <div class="page-sub">연간 / 월별 분석</div>
+      </div>
+      <div class="car-selector" id="stat-car-chips"></div>
+      <div class="card">
+        <div class="card-title">올해 지출 비율</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="chartPie"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">연비 추이</div>
+        <div class="chart-wrap"><canvas id="chartKmpl"></canvas></div>
+      </div>
+      <div class="card" id="stat-summary-card">
+        <div class="card-title">항목별 합계</div>
+        <div id="stat-bars"></div>
+      </div>
+    </div>
+
+    <!-- ══ 운행 일지 ══ -->
+    <div id="page-drive" class="page">
+      <div class="page-header">
+        <div class="page-title">🗺️ 운행 일지</div>
+        <div class="page-sub">출발지·목적지·운행 목적을 기록하세요</div>
+      </div>
+      <div class="car-selector" id="drive-car-chips"></div>
+      <!-- 이번달 요약 -->
+      <div class="drive-month-summary" id="drive-summary">
+        <div class="drive-month-stat"><div class="val" id="ds-count">0</div><div class="lbl">이번달 운행</div></div>
+        <div class="drive-month-stat"><div class="val" id="ds-km">0km</div><div class="lbl">총 주행거리</div></div>
+        <div class="drive-month-stat"><div class="val" id="ds-biz">0km</div><div class="lbl">업무 운행</div></div>
+      </div>
+      <div id="drive-list"></div>
+    </div>
+
+    <!-- ══ 차량 관리 ══ -->
+    <div id="page-car" class="page">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="page-title">🚗 차량 관리</div>
+          <div class="page-sub">내 차량 정보</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openCarModal()">+ 차량 추가</button>
+      </div>
+      <div id="car-list"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom Nav -->
+  <nav id="nav">
+    <button class="nav-btn active" onclick="navigate('dash')" id="nav-dash"><span class="icon">🏠</span>홈</button>
+    <button class="nav-btn" onclick="navigate('fuel')" id="nav-fuel"><span class="icon">⛽</span>주유</button>
+    <button class="nav-btn" onclick="navigate('repair')" id="nav-repair"><span class="icon">🔧</span>정비</button>
+    <button class="nav-btn" onclick="navigate('drive')" id="nav-drive"><span class="icon">🗺️</span>운행</button>
+    <button class="nav-btn" onclick="navigate('stat')" id="nav-stat"><span class="icon">📊</span>통계</button>
+    <button class="nav-btn" onclick="navigate('car')" id="nav-car"><span class="icon">🚗</span>차량</button>
+  </nav>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" onclick="openAddModal()">＋</button>
+
+<!-- ══ Modal: 운행 추가 ══ -->
+<div class="modal-overlay" id="modal-drive">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="drive-modal-title">🗺️ 운행 기록 추가</div>
+    <div class="form-section">
+      <label class="form-label">날짜</label>
+      <input type="date" class="form-input" id="d-date">
+    </div>
+    <div class="form-section">
+      <label class="form-label">경로</label>
+      <div id="waypoint-list"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addWaypoint()" style="width:100%;margin-top:8px;border-style:dashed">
+        ＋ 경유지 추가
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">출발 주행거리 (km)</label>
+        <input type="number" class="form-input" id="d-odo-start" placeholder="0">
+      </div>
+      <div class="form-section">
+        <label class="form-label">도착 주행거리 (km)</label>
+        <input type="number" class="form-input" id="d-odo-end" placeholder="0">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">운행 거리 (km)</label>
+      <input type="number" class="form-input" id="d-km" placeholder="자동계산 또는 직접 입력">
+      <div class="form-hint">출발·도착 주행거리 입력 시 자동계산</div>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">운행 목적</label>
+        <select class="form-select" id="d-purpose">
+          <option>업무</option>
+          <option>출퇴근</option>
+          <option>개인</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="form-section">
+        <label class="form-label">동승자</label>
+        <input type="text" class="form-input" id="d-passenger" placeholder="선택 입력">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">운행 내용</label>
+      <input type="text" class="form-input" id="d-memo" placeholder="예: 강남 거래처 미팅">
+    </div>
+    <button class="btn btn-primary" onclick="saveDrive()" id="drive-save-btn">저장하기</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-drive')">취소</button>
+  </div>
+</div>
+
+<!-- ══ Modal: 주유 추가 ══ -->
+<div class="modal-overlay" id="modal-fuel">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⛽ 주유 기록 추가</div>
+    <div class="form-section">
+      <label class="form-label">날짜</label>
+      <input type="date" class="form-input" id="f-date">
+    </div>
+    <div class="form-section">
+      <label class="form-label">주유소</label>
+      <input type="text" class="form-input" id="f-station" placeholder="예: GS칼텍스 강남점">
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">유종</label>
+        <select class="form-select" id="f-type">
+          <option>휘발유</option><option>경유</option><option>LPG</option><option>전기</option>
+        </select>
+      </div>
+      <div class="form-section">
+        <label class="form-label">주유량 (L)</label>
+        <input type="number" class="form-input" id="f-liter" placeholder="0.0" step="0.1">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">단가 (원/L)</label>
+        <input type="number" class="form-input" id="f-price" placeholder="0">
+      </div>
+      <div class="form-section">
+        <label class="form-label">주유금액 (원)</label>
+        <input type="number" class="form-input" id="f-cost" placeholder="자동계산">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">현재 주행거리 (km)</label>
+        <input type="number" class="form-input" id="f-odo" placeholder="0">
+      </div>
+      <div class="form-section">
+        <label class="form-label">연비 (km/L)</label>
+        <input type="number" class="form-input" id="f-kmpl" placeholder="자동계산" readonly style="opacity:.6">
+        <div class="form-hint">주행거리 입력 시 자동계산</div>
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">메모</label>
+      <input type="text" class="form-input" id="f-memo" placeholder="선택 입력">
+    </div>
+    <button class="btn btn-primary" onclick="saveFuel()">저장하기</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-fuel')">취소</button>
+  </div>
+</div>
+
+<!-- ══ Modal: 정비 추가 ══ -->
+<div class="modal-overlay" id="modal-repair">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="repair-modal-title">🔧 정비 기록 추가</div>
+    <div class="form-section">
+      <label class="form-label">날짜</label>
+      <input type="date" class="form-input" id="r-date">
+    </div>
+    <div class="form-section">
+      <label class="form-label">항목</label>
+      <input type="text" class="form-input" id="r-item" placeholder="예: 엔진오일 교환">
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">카테고리</label>
+        <select class="form-select" id="r-cat">
+          <option value="repair">정비·수리</option>
+          <option value="other">기타비용</option>
+        </select>
+      </div>
+      <div class="form-section">
+        <label class="form-label">비용 (원)</label>
+        <input type="number" class="form-input" id="r-cost" placeholder="0">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">정비소</label>
+      <input type="text" class="form-input" id="r-shop" placeholder="예: 현대 서비스센터">
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">주행거리 (km)</label>
+        <input type="number" class="form-input" id="r-odo" placeholder="0">
+      </div>
+      <div class="form-section">
+        <label class="form-label">다음 예정일</label>
+        <input type="date" class="form-input" id="r-next-date">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">메모</label>
+      <input type="text" class="form-input" id="r-memo" placeholder="선택 입력">
+    </div>
+    <button class="btn btn-primary" onclick="saveRepair()">저장하기</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-repair')">취소</button>
+  </div>
+</div>
+
+<!-- ══ Modal: 차량 추가 ══ -->
+<div class="modal-overlay" id="modal-car">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="car-modal-title">🚗 차량 추가</div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">제조사</label>
+        <input type="text" class="form-input" id="c-maker" placeholder="예: 현대">
+      </div>
+      <div class="form-section">
+        <label class="form-label">모델</label>
+        <input type="text" class="form-input" id="c-model" placeholder="예: 아반떼">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">연식</label>
+        <input type="number" class="form-input" id="c-year" placeholder="2023">
+      </div>
+      <div class="form-section">
+        <label class="form-label">연료</label>
+        <select class="form-select" id="c-fuel">
+          <option>휘발유</option><option>경유</option><option>LPG</option><option>전기</option><option>하이브리드</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">차량 번호</label>
+      <input type="text" class="form-input" id="c-plate" placeholder="예: 12가 3456">
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">현재 주행거리 (km)</label>
+        <input type="number" class="form-input" id="c-odo" placeholder="0">
+      </div>
+      <div class="form-section">
+        <label class="form-label">이모지 (선택)</label>
+        <input type="hidden" id="c-emoji" value="🚗">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="emoji-pick-btn active" data-emoji="🚗"  onclick="pickEmoji(this,'🚗')">🚗<div>승용차</div></button>
+          <button type="button" class="emoji-pick-btn"        data-emoji="🚌"  onclick="pickEmoji(this,'🚌')">🚌<div>버스</div></button>
+          <button type="button" class="emoji-pick-btn"        data-emoji="🚛"  onclick="pickEmoji(this,'🚛')">🚛<div>트럭</div></button>
+          <button type="button" class="emoji-pick-btn"        data-emoji="🏍️" onclick="pickEmoji(this,'🏍️')">🏍️<div>오토바이</div></button>
+          <button type="button" class="emoji-pick-btn"        data-emoji="🚲"  onclick="pickEmoji(this,'🚲')">🚲<div>자전거</div></button>
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">보험 만기일</label>
+      <input type="date" class="form-input" id="c-ins">
+    </div>
+    <button class="btn btn-primary" onclick="saveCar()" id="car-save-btn">저장하기</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-car')">취소</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+let db = {
+  cars: [],
+  fuels: [],
+  repairs: [],
+  drives: [],
+  activeCar: null,
+};
+
+function save() { localStorage.setItem('chaegyebu_v1', JSON.stringify(db)); }
+function load() {
+  const raw = localStorage.getItem('chaegyebu_v1');
+  if (raw) { try { db = JSON.parse(raw); } catch(e){} }
+  if (!db.cars)    db.cars = [];
+  if (!db.fuels)   db.fuels = [];
+  if (!db.repairs) db.repairs = [];
+  if (!db.drives)  db.drives = [];
+  // seed demo car if empty
+  if (db.cars.length === 0) {
+    db.cars.push({ id: 'car_demo', emoji:'🚗', maker:'현대', model:'아반떼', year:2022, fuel:'휘발유', plate:'12가 3456', odo:15000, insurance:'' });
+    db.activeCar = 'car_demo';
+    // seed demo fuel records
+    const demoFuels = [
+      { id:'f1', carId:'car_demo', date:'2025-01-05', station:'GS칼텍스', type:'휘발유', liter:40, price:1680, cost:67200, odo:14000, kmpl:12.5, memo:'' },
+      { id:'f2', carId:'car_demo', date:'2025-02-10', station:'SK에너지', type:'휘발유', liter:35, price:1650, cost:57750, odo:14450, kmpl:12.9, memo:'' },
+      { id:'f3', carId:'car_demo', date:'2025-03-01', station:'현대오일뱅크', type:'휘발유', liter:42, price:1700, cost:71400, odo:14960, kmpl:12.1, memo:'장거리' },
+    ];
+    db.fuels = demoFuels;
+    const demoRepairs = [
+      { id:'r1', carId:'car_demo', date:'2025-01-10', item:'엔진오일 교환', cat:'repair', cost:80000, shop:'현대서비스', odo:14000, nextDate:'2025-07-10', memo:'5W-30' },
+      { id:'r2', carId:'car_demo', date:'2025-02-20', item:'자동차 보험', cat:'other', cost:850000, shop:'', odo:'', nextDate:'2026-02-20', memo:'1년 갱신' },
+    ];
+    db.repairs = demoRepairs;
+    const demoDrives = [
+      { id:'dr1', carId:'car_demo', date:'2025-03-03', from:'회사', to:'강남 거래처', waypoints:['회사','서초 경유','강남 거래처'], odoStart:14800, odoEnd:14835, km:35, purpose:'업무', passenger:'김팀장', memo:'분기 미팅' },
+      { id:'dr2', carId:'car_demo', date:'2025-03-04', from:'집', to:'회사', waypoints:['집','회사'], odoStart:14835, odoEnd:14858, km:23, purpose:'출퇴근', passenger:'', memo:'' },
+      { id:'dr3', carId:'car_demo', date:'2025-03-05', from:'회사', to:'집', waypoints:['회사','집'], odoStart:14858, odoEnd:14881, km:23, purpose:'출퇴근', passenger:'', memo:'' },
+      { id:'dr4', carId:'car_demo', date:'2025-02-20', from:'집', to:'마트', waypoints:['집','마트'], odoStart:14600, odoEnd:14618, km:18, purpose:'개인', passenger:'가족', memo:'주말 장보기' },
+    ];
+    db.drives = demoDrives;
+    save();
+  }
+  if (!db.activeCar && db.cars.length > 0) db.activeCar = db.cars[0].id;
+}
+
+// ══════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════
+let currentPage = 'dash';
+let repairTab = 'repair';
+let chartMonthly, chartPie, chartKmpl;
+let editingCarId = null;
+let editingDriveId = null;
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  currentPage = page;
+  renderPage(page);
+
+  // FAB visibility
+  const fab = document.getElementById('fab-btn');
+  fab.style.display = ['dash','car'].includes(page) ? 'none' : 'flex';
+}
+
+function renderPage(page) {
+  if (page === 'dash')   renderDash();
+  if (page === 'fuel')   renderFuel();
+  if (page === 'repair') renderRepair();
+  if (page === 'drive')  renderDrive();
+  if (page === 'stat')   renderStat();
+  if (page === 'car')    renderCars();
+}
+
+// ══════════════════════════════════════════════
+//  CAR CHIPS
+// ══════════════════════════════════════════════
+function renderCarChips(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = db.cars.map(c => `
+    <div class="car-chip ${c.id === db.activeCar ? 'active' : ''}"
+         onclick="selectCar('${c.id}','${containerId}')">
+      ${c.emoji||'🚗'} ${c.maker} ${c.model}
+    </div>`).join('');
+}
+
+function selectCar(id, fromChip) {
+  db.activeCar = id; save();
+  // re-render current page
+  renderPage(currentPage);
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+function renderDash() {
+  const now = new Date();
+  document.getElementById('dash-date').textContent =
+    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
+
+  const car = db.cars.find(c => c.id === db.activeCar);
+  document.getElementById('dash-car-name').textContent = car ? `${car.emoji||'🚗'} ${car.maker} ${car.model}` : '-';
+
+  renderCarChips('dash-car-chips');
+
+  const myFuels   = db.fuels.filter(f => f.carId === db.activeCar);
+  const myRepairs = db.repairs.filter(r => r.carId === db.activeCar);
+
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthFuel   = myFuels.filter(f => f.date.startsWith(ym)).reduce((s,f)=>s+f.cost, 0);
+  const monthRepair = myRepairs.filter(r => r.date.startsWith(ym)).reduce((s,r)=>s+r.cost, 0);
+
+  const yr = String(now.getFullYear());
+  const yearTotal = [...myFuels,...myRepairs].filter(x=>x.date.startsWith(yr)).reduce((s,x)=>s+x.cost,0);
+  const kmpl = myFuels.filter(f=>f.kmpl).map(f=>f.kmpl);
+  const avgKmpl = kmpl.length ? (kmpl.reduce((a,b)=>a+b,0)/kmpl.length).toFixed(1) : '-';
+
+  document.getElementById('kpi-fuel').innerHTML   = `${fmt(monthFuel)}<span class="kpi-unit">원</span>`;
+  document.getElementById('kpi-kmpl').innerHTML   = `${avgKmpl}<span class="kpi-unit">km/L</span>`;
+  document.getElementById('kpi-repair').innerHTML = `${fmt(monthRepair)}<span class="kpi-unit">원</span>`;
+  document.getElementById('kpi-total').innerHTML  = `${fmt(yearTotal)}<span class="kpi-unit">원</span>`;
+
+  // Monthly chart
+  const months = Array.from({length:6},(_,i)=>{
+    const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  });
+  const fuelData   = months.map(m=>myFuels.filter(f=>f.date.startsWith(m)).reduce((s,f)=>s+f.cost,0)/1000);
+  const repairData = months.map(m=>myRepairs.filter(r=>r.date.startsWith(m)).reduce((s,r)=>s+r.cost,0)/1000);
+  const labels = months.map(m=>{ const [y,mo]=m.split('-'); return `${mo}월`; });
+
+  if (chartMonthly) chartMonthly.destroy();
+  const ctx = document.getElementById('chartMonthly').getContext('2d');
+  chartMonthly = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'주유비', data:fuelData, backgroundColor:'rgba(79,142,247,.7)', borderRadius:6, borderSkipped:false },
+      { label:'정비비', data:repairData, backgroundColor:'rgba(52,211,153,.7)', borderRadius:6, borderSkipped:false },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#8b92a8', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#8b92a8',font:{size:11}}, grid:{color:'#1e2230'} },
+        y:{ ticks:{color:'#8b92a8',font:{size:11}, callback:v=>`${v}K`}, grid:{color:'#2a3048'} }
+      }
+    }
+  });
+
+  // Recent list
+  const all = [...myFuels.map(f=>({...f,_type:'fuel'})),...myRepairs.map(r=>({...r,_type:'repair'}))]
+    .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  const rl = document.getElementById('recent-list');
+  if (!all.length) { rl.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">아직 기록이 없어요<br>주유 또는 정비 기록을 추가해 보세요</div></div>'; return; }
+  rl.innerHTML = all.map(item => {
+    if (item._type==='fuel') return `
+      <div class="list-item">
+        <div class="item-icon fuel">⛽</div>
+        <div class="item-body">
+          <div class="item-title">${item.station||'주유'} <span class="badge badge-blue">${item.type}</span></div>
+          <div class="item-meta">${item.date}${item.kmpl?` · ${item.kmpl}km/L`:''}</div>
+        </div>
+        <div class="item-amount neg">-${fmt(item.cost)}원</div>
+      </div>`;
+    return `
+      <div class="list-item">
+        <div class="item-icon ${item.cat==='repair'?'repair':'other'}">${item.cat==='repair'?'🔧':'💳'}</div>
+        <div class="item-body">
+          <div class="item-title">${item.item}</div>
+          <div class="item-meta">${item.date}${item.shop?` · ${item.shop}`:''}</div>
+        </div>
+        <div class="item-amount neg">-${fmt(item.cost)}원</div>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  FUEL
+// ══════════════════════════════════════════════
+function renderFuel() {
+  renderCarChips('fuel-car-chips');
+  const fuels = db.fuels.filter(f=>f.carId===db.activeCar).sort((a,b)=>b.date.localeCompare(a.date));
+  const totalL = fuels.reduce((s,f)=>s+f.liter,0);
+  const totalC = fuels.reduce((s,f)=>s+f.cost,0);
+  const kmplArr = fuels.filter(f=>f.kmpl).map(f=>f.kmpl);
+  const avgK = kmplArr.length ? (kmplArr.reduce((a,b)=>a+b,0)/kmplArr.length).toFixed(1) : '-';
+  document.getElementById('fuel-avg-kmpl').innerHTML = `${avgK}<span class="kpi-unit">km/L</span>`;
+  document.getElementById('fuel-total-liter').innerHTML = `${totalL.toFixed(1)}<span class="kpi-unit">L</span>`;
+  document.getElementById('fuel-total-cost').innerHTML = `${fmt(totalC)}<span class="kpi-unit">원</span>`;
+
+  const el = document.getElementById('fuel-list');
+  if (!fuels.length) { el.innerHTML='<div class="empty"><div class="empty-icon">⛽</div><div class="empty-text">주유 기록이 없어요</div></div>'; return; }
+  el.innerHTML = fuels.map(f=>`
+    <div class="list-item">
+      <div class="item-icon fuel">⛽</div>
+      <div class="item-body">
+        <div class="item-title">${f.station||'주유'} <span class="badge badge-blue">${f.type}</span></div>
+        <div class="item-meta">${f.date} · ${f.liter}L · ${f.price}원/L${f.kmpl?` · <b style="color:var(--green)">${f.kmpl}km/L</b>`:''}</div>
+        ${f.memo?`<div class="item-meta">${f.memo}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="item-amount neg">-${fmt(f.cost)}원</div>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecord('fuel','${f.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  REPAIR
+// ══════════════════════════════════════════════
+function switchRepairTab(tab) {
+  repairTab = tab;
+  document.querySelectorAll('#repair-tabs .tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (i===0&&tab==='repair')||(i===1&&tab==='other'));
+  });
+  renderRepair();
+}
+function renderRepair() {
+  renderCarChips('repair-car-chips');
+  const repairs = db.repairs.filter(r=>r.carId===db.activeCar && r.cat===repairTab)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const el = document.getElementById('repair-list-wrap');
+  if (!repairs.length) {
+    el.innerHTML=`<div class="card"><div class="empty"><div class="empty-icon">${repairTab==='repair'?'🔧':'💳'}</div><div class="empty-text">기록이 없어요</div></div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="card">`+repairs.map(r=>`
+    <div class="list-item">
+      <div class="item-icon ${r.cat==='repair'?'repair':'other'}">${r.cat==='repair'?'🔧':'💳'}</div>
+      <div class="item-body">
+        <div class="item-title">${r.item}</div>
+        <div class="item-meta">${r.date}${r.shop?` · ${r.shop}`:''}${r.odo?` · ${fmt(r.odo)}km`:''}</div>
+        ${r.nextDate?`<div class="item-meta">다음 예정: <b style="color:var(--yellow)">${r.nextDate}</b></div>`:''}
+        ${r.memo?`<div class="item-meta">${r.memo}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="item-amount neg">-${fmt(r.cost)}원</div>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecord('repair','${r.id}')">삭제</button>
+      </div>
+    </div>`).join('')+`</div>`;
+}
+
+// ══════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════
+function renderStat() {
+  renderCarChips('stat-car-chips');
+  const myFuels   = db.fuels.filter(f=>f.carId===db.activeCar);
+  const myRepairs = db.repairs.filter(r=>r.carId===db.activeCar);
+  const totalFuel   = myFuels.reduce((s,f)=>s+f.cost,0);
+  const totalRepair = myRepairs.filter(r=>r.cat==='repair').reduce((s,r)=>s+r.cost,0);
+  const totalOther  = myRepairs.filter(r=>r.cat==='other').reduce((s,r)=>s+r.cost,0);
+  const grand = totalFuel+totalRepair+totalOther;
+
+  // Pie
+  if (chartPie) chartPie.destroy();
+  const ctxP = document.getElementById('chartPie').getContext('2d');
+  chartPie = new Chart(ctxP, {
+    type:'doughnut',
+    data:{ labels:['주유비','정비비','기타'],
+      datasets:[{ data:[totalFuel,totalRepair,totalOther],
+        backgroundColor:['rgba(79,142,247,.8)','rgba(52,211,153,.8)','rgba(251,146,60,.8)'],
+        borderColor:'#161920', borderWidth:3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{ position:'right', labels:{ color:'#8b92a8', font:{size:11}, padding:12 } } } }
+  });
+
+  // KmPL line chart
+  const sorted = myFuels.filter(f=>f.kmpl).sort((a,b)=>a.date.localeCompare(b.date));
+  if (chartKmpl) chartKmpl.destroy();
+  const ctxK = document.getElementById('chartKmpl').getContext('2d');
+  chartKmpl = new Chart(ctxK, {
+    type:'line',
+    data:{ labels: sorted.map(f=>f.date.slice(5)),
+      datasets:[{ label:'연비(km/L)', data:sorted.map(f=>f.kmpl),
+        borderColor:'rgba(79,142,247,1)', backgroundColor:'rgba(79,142,247,.1)',
+        fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#4f8ef7' }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#8b92a8', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#8b92a8',font:{size:10}}, grid:{color:'#1e2230'} },
+        y:{ ticks:{color:'#8b92a8',font:{size:10}}, grid:{color:'#2a3048'} }
+      }
+    }
+  });
+
+  // Stat bars
+  const items = [
+    { label:'주유비', val:totalFuel, color:'var(--accent)' },
+    { label:'정비비', val:totalRepair, color:'var(--green)' },
+    { label:'기타비용', val:totalOther, color:'var(--orange)' },
+  ];
+  const max = Math.max(...items.map(i=>i.val), 1);
+  document.getElementById('stat-bars').innerHTML = items.map(i=>`
+    <div class="stat-row">
+      <div class="stat-label">${i.label}</div>
+      <div class="stat-bar-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${(i.val/max*100).toFixed(1)}%;background:${i.color}"></div></div>
+      </div>
+      <div class="stat-val">${fmt(i.val)}원</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  CARS
+// ══════════════════════════════════════════════
+function renderCars() {
+  const el = document.getElementById('car-list');
+  if (!db.cars.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">🚗</div><div class="empty-text">등록된 차량이 없어요<br>차량 추가 버튼을 눌러 추가해 보세요</div></div>';
+    return;
+  }
+  el.innerHTML = db.cars.map(c => {
+    const fuels = db.fuels.filter(f=>f.carId===c.id);
+    const totalCost = [...fuels,...db.repairs.filter(r=>r.carId===c.id)].reduce((s,x)=>s+x.cost,0);
+    const kmplArr = fuels.filter(f=>f.kmpl).map(f=>f.kmpl);
+    const avgK = kmplArr.length?(kmplArr.reduce((a,b)=>a+b,0)/kmplArr.length).toFixed(1):'-';
+    // Insurance warning
+    let insWarning = '';
+    if (c.insurance) {
+      const daysLeft = Math.ceil((new Date(c.insurance)-new Date())/(1000*60*60*24));
+      if (daysLeft <= 30) insWarning = `<div style="color:var(--red);font-size:11px;margin-top:6px">⚠️ 보험 만기 ${daysLeft>0?daysLeft+'일 후':'만료됨'}</div>`;
+    }
+    return `
+    <div class="card" style="border-left:3px solid var(--accent);cursor:pointer" onclick="selectCar('${c.id}','')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+        <div>
+          <div style="font-size:28px;line-height:1">${c.emoji||'🚗'}</div>
+          <div style="font-size:16px;font-weight:700;margin-top:6px">${c.maker} ${c.model} <span style="font-size:12px;color:var(--text2)">${c.year}년</span></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${c.plate} · ${c.fuel}</div>
+          ${insWarning}
+        </div>
+        <div style="text-align:right">
+          ${c.id===db.activeCar?'<span class="badge badge-blue">선택됨</span>':''}
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editCar('${c.id}')">✏️ 수정</button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteCar('${c.id}')">삭제</button>
+          </div>
+        </div>
+      </div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-item-label">현재 주행거리</div><div class="info-item-value">${fmt(c.odo)}km</div></div>
+        <div class="info-item"><div class="info-item-label">평균 연비</div><div class="info-item-value">${avgK}km/L</div></div>
+        <div class="info-item"><div class="info-item-label">총 주유 횟수</div><div class="info-item-value">${fuels.length}회</div></div>
+        <div class="info-item"><div class="info-item-label">총 지출</div><div class="info-item-value">${fmt(totalCost)}원</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  MODALS
+// ══════════════════════════════════════════════
+function openAddModal() {
+  if (currentPage==='fuel')   { openFuelModal(); return; }
+  if (currentPage==='repair') { openRepairModal(); return; }
+  if (currentPage==='drive')  { openDriveModal(); return; }
+}
+function openFuelModal() {
+  document.getElementById('f-date').value = today();
+  document.getElementById('f-station').value='';
+  document.getElementById('f-liter').value='';
+  document.getElementById('f-price').value='';
+  document.getElementById('f-cost').value='';
+  document.getElementById('f-odo').value='';
+  document.getElementById('f-kmpl').value='';
+  document.getElementById('f-memo').value='';
+  openModal('modal-fuel');
+}
+// ── Waypoint helpers ──────────────────────────────────────────
+function getWaypoints() {
+  return Array.from(document.querySelectorAll('#waypoint-list .wp-input')).map(i => i.value.trim());
+}
+
+function renderWaypointList(stops) {
+  // stops: array of strings e.g. ['회사','거래처A','목적지']
+  const list = document.getElementById('waypoint-list');
+  list.innerHTML = '';
+  stops.forEach((val, i) => {
+    const isStart = i === 0;
+    const isEnd   = i === stops.length - 1;
+    const isVia   = !isStart && !isEnd;
+    const dotCls  = isStart ? 'start' : isEnd ? 'end' : 'via';
+    const lbl     = isStart ? '출발지' : isEnd ? '목적지' : `경유지 ${i}`;
+    const canRemove = isVia; // only via stops can be removed
+
+    const row = document.createElement('div');
+    row.className = 'waypoint-row';
+    row.dataset.index = i;
+    row.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex-shrink:0">
+        ${i > 0 ? '<div class="wp-connector" style="height:10px"></div>' : ''}
+        <div class="wp-dot ${dotCls}"></div>
+        ${!isEnd ? '<div class="wp-connector" style="height:10px"></div>' : ''}
+      </div>
+      <div style="flex:1">
+        <div class="waypoint-label">${lbl}</div>
+        <input type="text" class="form-input wp-input" value="${val}" placeholder="${lbl} 입력" style="padding:10px 12px">
+      </div>
+      ${canRemove
+        ? `<button type="button" class="wp-remove" onclick="removeWaypoint(${i})" title="삭제">×</button>`
+        : '<div style="width:30px"></div>'}
+    `;
+    list.appendChild(row);
+  });
+}
+
+function addWaypoint() {
+  const stops = getWaypoints();
+  // Insert new via stop before the last (destination)
+  const dest = stops.pop();
+  stops.push('');   // new via
+  stops.push(dest); // destination goes back to end
+  renderWaypointList(stops);
+  // Focus the new via input
+  const inputs = document.querySelectorAll('#waypoint-list .wp-input');
+  inputs[inputs.length - 2].focus();
+}
+
+function removeWaypoint(idx) {
+  const stops = getWaypoints();
+  stops.splice(idx, 1);
+  renderWaypointList(stops);
+}
+
+function openDriveModal() {
+  editingDriveId = null;
+  document.getElementById('drive-modal-title').textContent = '🗺️ 운행 기록 추가';
+  document.getElementById('drive-save-btn').textContent = '저장하기';
+  document.getElementById('d-date').value = today();
+  renderWaypointList(['', '']); // start + destination
+  document.getElementById('d-odo-start').value = '';
+  document.getElementById('d-odo-end').value = '';
+  document.getElementById('d-km').value = '';
+  document.getElementById('d-purpose').value = '업무';
+  document.getElementById('d-passenger').value = '';
+  document.getElementById('d-memo').value = '';
+  openModal('modal-drive');
+}
+
+function editDrive(id) {
+  const d = db.drives.find(x => x.id === id);
+  if (!d) return;
+  editingDriveId = id;
+  document.getElementById('drive-modal-title').textContent = '🗺️ 운행 기록 수정';
+  document.getElementById('drive-save-btn').textContent = '수정 완료';
+  document.getElementById('d-date').value      = d.date || today();
+  // stops: use waypoints array if present, else build from from/to
+  const stops = d.waypoints && d.waypoints.length >= 2 ? d.waypoints : [d.from || '', d.to || ''];
+  renderWaypointList(stops);
+  document.getElementById('d-odo-start').value = d.odoStart || '';
+  document.getElementById('d-odo-end').value   = d.odoEnd || '';
+  document.getElementById('d-km').value        = d.km || '';
+  document.getElementById('d-purpose').value   = d.purpose || '업무';
+  document.getElementById('d-passenger').value = d.passenger || '';
+  document.getElementById('d-memo').value      = d.memo || '';
+  openModal('modal-drive');
+}
+function openRepairModal() {
+  document.getElementById('r-date').value=today();
+  document.getElementById('r-item').value='';
+  document.getElementById('r-cat').value = repairTab;
+  document.getElementById('r-cost').value='';
+  document.getElementById('r-shop').value='';
+  document.getElementById('r-odo').value='';
+  document.getElementById('r-next-date').value='';
+  document.getElementById('r-memo').value='';
+  openModal('modal-repair');
+}
+function pickEmoji(btn, emoji) {
+  document.querySelectorAll('.emoji-pick-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('c-emoji').value = emoji;
+}
+function openCarModal() {
+  editingCarId = null;
+  document.getElementById('car-modal-title').textContent = '🚗 차량 추가';
+  document.getElementById('car-save-btn').textContent = '저장하기';
+  ['c-maker','c-model','c-year','c-plate','c-odo','c-ins'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c-fuel').value = '휘발유';
+  document.getElementById('c-emoji').value = '🚗';
+  document.querySelectorAll('.emoji-pick-btn').forEach(b => b.classList.toggle('active', b.dataset.emoji === '🚗'));
+  openModal('modal-car');
+}
+
+function editCar(id) {
+  const c = db.cars.find(x=>x.id===id);
+  if (!c) return;
+  editingCarId = id;
+  document.getElementById('car-modal-title').textContent = '🚗 차량 수정';
+  document.getElementById('car-save-btn').textContent = '수정 완료';
+  document.getElementById('c-maker').value  = c.maker||'';
+  document.getElementById('c-model').value  = c.model||'';
+  document.getElementById('c-year').value   = c.year||'';
+  document.getElementById('c-fuel').value   = c.fuel||'휘발유';
+  document.getElementById('c-plate').value  = c.plate||'';
+  document.getElementById('c-odo').value    = c.odo||'';
+  document.getElementById('c-ins').value    = c.insurance||'';
+  // sync emoji picker
+  const emoji = c.emoji || '🚗';
+  document.getElementById('c-emoji').value = emoji;
+  document.querySelectorAll('.emoji-pick-btn').forEach(b => b.classList.toggle('active', b.dataset.emoji === emoji));
+  openModal('modal-car');
+}
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target===overlay) overlay.classList.remove('open'); });
+});
+
+// Auto-calc drive km
+['d-odo-start','d-odo-end'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const s = parseFloat(document.getElementById('d-odo-start').value)||0;
+    const e = parseFloat(document.getElementById('d-odo-end').value)||0;
+    if (s && e && e > s) document.getElementById('d-km').value = (e - s).toFixed(1);
+  });
+});
+
+// ══════════════════════════════════════════════
+//  DRIVE LOG
+// ══════════════════════════════════════════════
+function renderDrive() {
+  renderCarChips('drive-car-chips');
+  const drives = db.drives.filter(d => d.carId === db.activeCar).sort((a,b) => b.date.localeCompare(a.date));
+
+  // This month summary
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisMonth = drives.filter(d => d.date.startsWith(ym));
+  const totalKm = thisMonth.reduce((s,d) => s + d.km, 0);
+  const bizKm   = thisMonth.filter(d => d.purpose === '업무').reduce((s,d) => s + d.km, 0);
+  document.getElementById('ds-count').textContent = thisMonth.length + '회';
+  document.getElementById('ds-km').textContent = fmt(totalKm) + 'km';
+  document.getElementById('ds-biz').textContent = fmt(bizKm) + 'km';
+
+  const el = document.getElementById('drive-list');
+  if (!drives.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🗺️</div><div class="empty-text">운행 기록이 없어요<br>+ 버튼으로 운행을 기록해 보세요</div></div>';
+    return;
+  }
+
+  // Group by month
+  const grouped = {};
+  drives.forEach(d => {
+    const key = d.date.slice(0,7);
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(d);
+  });
+
+  let html = '';
+  Object.entries(grouped).forEach(([month, items]) => {
+    const [y, m] = month.split('-');
+    const mTotalKm = items.reduce((s,d)=>s+d.km,0);
+    const mBizKm   = items.filter(d=>d.purpose==='업무').reduce((s,d)=>s+d.km,0);
+    html += `<div class="drive-month-header">${y}년 ${m}월</div>`;
+    html += `<div class="drive-month-summary" style="margin-bottom:10px">
+      <div class="drive-month-stat"><div class="val">${items.length}회</div><div class="lbl">운행 횟수</div></div>
+      <div class="drive-month-stat"><div class="val">${fmt(mTotalKm)}km</div><div class="lbl">총 거리</div></div>
+      <div class="drive-month-stat"><div class="val">${fmt(mBizKm)}km</div><div class="lbl">업무</div></div>
+    </div>`;
+    items.forEach(d => {
+      const stops = d.waypoints && d.waypoints.length >= 2 ? d.waypoints : [d.from||'출발', d.to||'목적지'];
+      const routeHtml = stops.map((s, i) => {
+        const isStart = i === 0, isEnd = i === stops.length - 1;
+        const dotCls  = isStart ? 'start' : isEnd ? 'end' : 'via';
+        const seg     = !isEnd ? `<div class="route-seg"><div class="route-seg-line"></div></div>` : '';
+        return `<div class="drive-route-stop"><div class="route-dot ${dotCls}"></div><span>${s||'-'}</span></div>${seg}`;
+      }).join('');
+
+      html += `
+        <div class="drive-card purpose-${d.purpose}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1;min-width:0">
+              <div class="drive-route-full">${routeHtml}</div>
+              <div class="drive-meta">
+                <span class="drive-meta-item">📅 ${d.date}</span>
+                ${d.odoStart?`<span class="drive-meta-item">🔢 ${fmt(d.odoStart)}→${fmt(d.odoEnd)}km</span>`:''}
+                ${d.passenger?`<span class="drive-meta-item">👤 ${d.passenger}</span>`:''}
+                ${d.memo?`<span class="drive-meta-item">📝 ${d.memo}</span>`:''}
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px">
+              <span class="purpose-badge purpose-${d.purpose}">${d.purpose}</span>
+              <div class="drive-km">${d.km}km</div>
+              <div style="display:flex;gap:6px;margin-top:4px">
+                <button class="btn btn-ghost btn-sm" onclick="editDrive('${d.id}')">✏️ 수정</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDrive('${d.id}')">삭제</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+  });
+
+  el.innerHTML = html;
+}
+
+function saveDrive() {
+  const date  = document.getElementById('d-date').value;
+  const stops = getWaypoints();
+  const from  = stops[0] || '';
+  const to    = stops[stops.length - 1] || '';
+  const km    = parseFloat(document.getElementById('d-km').value) || 0;
+  if (!date || (!from && !to)) { alert('날짜와 출발지 또는 목적지를 입력해주세요'); return; }
+  if (!km) { alert('운행 거리를 입력해주세요'); return; }
+  const odoStart = parseFloat(document.getElementById('d-odo-start').value) || 0;
+  const odoEnd   = parseFloat(document.getElementById('d-odo-end').value) || 0;
+
+  if (editingDriveId) {
+    const drv = db.drives.find(d => d.id === editingDriveId);
+    if (drv) {
+      drv.date = date; drv.from = from; drv.to = to;
+      drv.waypoints = stops;
+      drv.odoStart = odoStart; drv.odoEnd = odoEnd; drv.km = km;
+      drv.purpose   = document.getElementById('d-purpose').value;
+      drv.passenger = document.getElementById('d-passenger').value;
+      drv.memo      = document.getElementById('d-memo').value;
+    }
+    editingDriveId = null;
+  } else {
+    db.drives.push({
+      id: 'dr' + Date.now(),
+      carId: db.activeCar,
+      date, from, to,
+      waypoints: stops,
+      odoStart, odoEnd, km,
+      purpose:   document.getElementById('d-purpose').value,
+      passenger: document.getElementById('d-passenger').value,
+      memo:      document.getElementById('d-memo').value,
+    });
+  }
+  if (odoEnd) {
+    const car = db.cars.find(c => c.id === db.activeCar);
+    if (car && odoEnd > car.odo) car.odo = odoEnd;
+  }
+  save();
+  closeModal('modal-drive');
+  renderDrive();
+}
+
+function deleteDrive(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  db.drives = db.drives.filter(d=>d.id!==id);
+  save(); renderDrive();
+}
+
+// Auto-calc fuel cost
+['f-liter','f-price'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    const l=parseFloat(document.getElementById('f-liter').value)||0;
+    const p=parseFloat(document.getElementById('f-price').value)||0;
+    if (l&&p) document.getElementById('f-cost').value=Math.round(l*p);
+    calcKmpl();
+  });
+});
+document.getElementById('f-odo').addEventListener('input', calcKmpl);
+function calcKmpl(){
+  const odo=parseFloat(document.getElementById('f-odo').value)||0;
+  const liter=parseFloat(document.getElementById('f-liter').value)||0;
+  if (!odo||!liter) { document.getElementById('f-kmpl').value=''; return; }
+  const fuels = db.fuels.filter(f=>f.carId===db.activeCar).sort((a,b)=>b.date.localeCompare(a.date));
+  const prevOdo = fuels.length ? fuels[0].odo : 0;
+  if (prevOdo && odo>prevOdo) {
+    document.getElementById('f-kmpl').value = ((odo-prevOdo)/liter).toFixed(1);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SAVE
+// ══════════════════════════════════════════════
+function saveFuel() {
+  const date  = document.getElementById('f-date').value;
+  const liter = parseFloat(document.getElementById('f-liter').value);
+  const cost  = parseFloat(document.getElementById('f-cost').value)||parseFloat(document.getElementById('f-liter').value)*parseFloat(document.getElementById('f-price').value)||0;
+  if (!date||!liter) { alert('날짜와 주유량은 필수입니다'); return; }
+  const rec = {
+    id: 'f'+Date.now(),
+    carId: db.activeCar,
+    date,
+    station: document.getElementById('f-station').value,
+    type: document.getElementById('f-type').value,
+    liter,
+    price: parseFloat(document.getElementById('f-price').value)||0,
+    cost: Math.round(cost),
+    odo: parseFloat(document.getElementById('f-odo').value)||0,
+    kmpl: parseFloat(document.getElementById('f-kmpl').value)||0,
+    memo: document.getElementById('f-memo').value,
+  };
+  db.fuels.push(rec);
+  // update car odo
+  const car = db.cars.find(c=>c.id===db.activeCar);
+  if (car && rec.odo > car.odo) { car.odo = rec.odo; }
+  save();
+  closeModal('modal-fuel');
+  renderPage(currentPage);
+}
+
+function saveRepair() {
+  const date = document.getElementById('r-date').value;
+  const item = document.getElementById('r-item').value;
+  const cost = parseFloat(document.getElementById('r-cost').value)||0;
+  if (!date||!item) { alert('날짜와 항목은 필수입니다'); return; }
+  db.repairs.push({
+    id: 'r'+Date.now(),
+    carId: db.activeCar,
+    date, item,
+    cat: document.getElementById('r-cat').value,
+    cost,
+    shop: document.getElementById('r-shop').value,
+    odo: parseFloat(document.getElementById('r-odo').value)||0,
+    nextDate: document.getElementById('r-next-date').value,
+    memo: document.getElementById('r-memo').value,
+  });
+  save();
+  closeModal('modal-repair');
+  renderPage(currentPage);
+}
+
+function saveCar() {
+  const maker = document.getElementById('c-maker').value;
+  const model = document.getElementById('c-model').value;
+  if (!maker||!model) { alert('제조사와 모델은 필수입니다'); return; }
+  if (editingCarId) {
+    // Edit mode
+    const car = db.cars.find(c=>c.id===editingCarId);
+    if (car) {
+      car.emoji = document.getElementById('c-emoji').value||'🚗';
+      car.maker = maker; car.model = model;
+      car.year  = parseInt(document.getElementById('c-year').value)||car.year;
+      car.fuel  = document.getElementById('c-fuel').value;
+      car.plate = document.getElementById('c-plate').value;
+      car.odo   = parseFloat(document.getElementById('c-odo').value)||car.odo;
+      car.insurance = document.getElementById('c-ins').value;
+    }
+    editingCarId = null;
+  } else {
+    // Add mode
+    db.cars.push({
+      id: 'car'+Date.now(),
+      emoji: document.getElementById('c-emoji').value||'🚗',
+      maker, model,
+      year: parseInt(document.getElementById('c-year').value)||new Date().getFullYear(),
+      fuel: document.getElementById('c-fuel').value,
+      plate: document.getElementById('c-plate').value,
+      odo: parseFloat(document.getElementById('c-odo').value)||0,
+      insurance: document.getElementById('c-ins').value,
+    });
+    if (!db.activeCar) db.activeCar = db.cars[db.cars.length-1].id;
+  }
+  save();
+  closeModal('modal-car');
+  renderCars();
+}
+
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
+function deleteRecord(type, id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  if (type==='fuel')   db.fuels   = db.fuels.filter(f=>f.id!==id);
+  if (type==='repair') db.repairs = db.repairs.filter(r=>r.id!==id);
+  save(); renderPage(currentPage);
+}
+function deleteCar(id) {
+  if (!confirm('차량과 모든 기록이 삭제됩니다. 계속할까요?')) return;
+  db.cars    = db.cars.filter(c=>c.id!==id);
+  db.fuels   = db.fuels.filter(f=>f.carId!==id);
+  db.repairs = db.repairs.filter(r=>r.carId!==id);
+  db.drives  = db.drives.filter(d=>d.carId!==id);
+  if (db.activeCar===id) db.activeCar = db.cars[0]?.id||null;
+  save(); renderCars();
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+load();
+document.getElementById('fab-btn').style.display = 'none'; // hidden on dash initially
+navigate('dash');
+</script>
+</body>
+</html>
