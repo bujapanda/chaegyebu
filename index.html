@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <html lang="ko">
 <head>
   <link rel="manifest" href="manifest.json">
@@ -7,30 +10,7 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   }
-</script>
-```
-→ **Commit changes** 저장
-
----
-
-## 6단계 — 앱 아이콘 만들기 (무료)
-
-1. [favicon.io](https://favicon.io/favicon-generator/) 접속
-2. Text: `🚗` 또는 `차` 입력
-3. Background: `#1F3864` (진한 파란색)
-4. **Download** → 압축 파일 안에서 PNG 파일 꺼내기
-5. 파일 이름을 `icon-192.png`, `icon-512.png` 으로 바꿔서 GitHub에 업로드
-
----
-
-## 7단계 — PWABuilder로 APK 만들기
-
-1. [pwabuilder.com](https://www.pwabuilder.com) 접속
-2. GitHub Pages 주소 입력:
-```
-   https://[내아이디].github.io/chaegyebu/
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+</script>  
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>차계부</title>
