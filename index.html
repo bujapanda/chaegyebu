@@ -467,6 +467,148 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <div id="car-list"></div>
     </div>
 
+    <!-- ══ 설정 ══ -->
+    <div id="page-setting" class="page">
+      <div class="page-header">
+        <div class="page-title">⚙️ 설정</div>
+        <div class="page-sub">테마 및 앱 환경설정</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎨 테마 선택</div>
+        <div id="theme-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px"></div>
+      </div>
+
+      <!-- 커스텀 테마 카드 -->
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">✏️ 커스텀 테마</div>
+
+        <!-- 탭 -->
+        <div class="tabs" id="custom-tabs" style="margin-bottom:14px">
+          <button class="tab-btn active" onclick="switchCustomTab('palette')">🎨 팔레트</button>
+          <button class="tab-btn" onclick="switchCustomTab('image')">🖼️ 배경 이미지</button>
+        </div>
+
+        <!-- 팔레트 탭 -->
+        <div id="custom-palette-tab">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">배경색</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-bg" value="#0d0f14" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-bg-hex" value="#0d0f14" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-bg','cp-bg-hex')" placeholder="#000000">
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">카드 배경</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-surface" value="#161920" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-surface-hex" value="#161920" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-surface','cp-surface-hex')" placeholder="#000000">
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">포인트 색상</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-accent" value="#4f8ef7" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-accent-hex" value="#4f8ef7" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-accent','cp-accent-hex')" placeholder="#000000">
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">텍스트 색상</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-text" value="#e8eaf0" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-text-hex" value="#e8eaf0" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-text','cp-text-hex')" placeholder="#000000">
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">테두리 색상</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-border" value="#2a3048" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-border-hex" value="#2a3048" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-border','cp-border-hex')" placeholder="#000000">
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:0">
+              <label class="form-label">보조 색상</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="cp-accent2" value="#7c6af7" style="width:44px;height:44px;border:none;border-radius:10px;cursor:pointer;background:none;padding:0">
+                <input type="text" class="form-input" id="cp-accent2-hex" value="#7c6af7" style="flex:1;font-family:var(--mono);font-size:13px" oninput="syncColorHex('cp-accent2','cp-accent2-hex')" placeholder="#000000">
+              </div>
+            </div>
+          </div>
+          <!-- 미리보기 -->
+          <div id="palette-preview" style="margin-top:14px;border-radius:12px;padding:14px;border:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600">미리보기</div>
+            <div id="palette-preview-box" style="border-radius:10px;padding:12px">
+              <div style="font-size:13px;font-weight:700" id="pv-title">차계부 🚗</div>
+              <div style="font-size:11px;margin-top:4px" id="pv-sub">포인트 색상 미리보기</div>
+              <div style="margin-top:8px;height:4px;border-radius:2px;width:60%" id="pv-bar"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:12px" onclick="applyCustomPalette()">✅ 이 팔레트 적용</button>
+        </div>
+
+        <!-- 배경 이미지 탭 -->
+        <div id="custom-image-tab" style="display:none">
+          <div style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s" id="img-drop-zone" onclick="document.getElementById('bg-img-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleBgImageDrop(event)">
+            <div style="font-size:36px">🖼️</div>
+            <div style="font-size:13px;font-weight:600;margin-top:8px;color:var(--text)">사진 선택 또는 드래그</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">JPG, PNG, WEBP 지원</div>
+            <input type="file" id="bg-img-input" accept="image/*" style="display:none" onchange="handleBgImageSelect(event)">
+          </div>
+          <!-- 현재 배경 미리보기 -->
+          <div id="bg-preview-wrap" style="display:none;margin-top:12px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:600">현재 배경 이미지</div>
+            <div style="position:relative;border-radius:12px;overflow:hidden;height:120px">
+              <img id="bg-preview-img" style="width:100%;height:100%;object-fit:cover">
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center">
+                <span style="color:white;font-size:12px;font-weight:600">배경 적용됨</span>
+              </div>
+            </div>
+            <!-- 투명도 조절 -->
+            <div style="margin-top:12px">
+              <label class="form-label">배경 투명도 (카드 오버레이)</label>
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="range" id="bg-opacity" min="0" max="95" value="60" style="flex:1;accent-color:var(--accent)" oninput="updateBgOpacity(this.value)">
+                <span id="bg-opacity-val" style="font-family:var(--mono);font-size:12px;width:36px">60%</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-primary" style="flex:1" onclick="applyBgImage()">✅ 적용</button>
+              <button class="btn btn-danger" style="flex:1" onclick="removeBgImage()">🗑️ 제거</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">🔤 폰트 크기</div>
+        <div style="display:flex;gap:8px;margin-top:4px" id="font-size-btns">
+          <button class="btn btn-ghost" style="flex:1" data-size="small" onclick="setFontSize('small')">작게</button>
+          <button class="btn btn-primary" style="flex:1" data-size="medium" onclick="setFontSize('medium')">보통</button>
+          <button class="btn btn-ghost" style="flex:1" data-size="large" onclick="setFontSize('large')">크게</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">ℹ️ 앱 정보</div>
+        <div style="color:var(--text2);font-size:13px;line-height:1.8">
+          <div>버전: 1.1.0</div>
+          <div>데이터 저장: 기기 로컬</div>
+        </div>
+        <button class="btn btn-danger" style="width:100%;margin-top:14px" onclick="resetData()">🗑️ 모든 데이터 초기화</button>
+      </div>
+
+      <!-- 저장 버튼 -->
+      <div style="padding:16px 0 8px">
+        <button class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 20px rgba(79,142,247,.4)" onclick="saveSettingAndGoHome()">
+          ✅ 저장하고 홈으로
+        </button>
+        <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="navigate('dash')">
+          취소
+        </button>
+      </div>
+    </div>
+
   </div><!-- /content -->
 
   <!-- Bottom Nav -->
@@ -477,6 +619,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="nav-btn" onclick="navigate('drive')" id="nav-drive"><span class="icon">🗺️</span>운행</button>
     <button class="nav-btn" onclick="navigate('stat')" id="nav-stat"><span class="icon">📊</span>통계</button>
     <button class="nav-btn" onclick="navigate('car')" id="nav-car"><span class="icon">🚗</span>차량</button>
+    <button class="nav-btn" onclick="navigate('setting')" id="nav-setting"><span class="icon">⚙️</span>설정</button>
   </nav>
 </div>
 
@@ -542,7 +685,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div class="modal-overlay" id="modal-fuel">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">⛽ 주유 기록 추가</div>
+    <div class="modal-title" id="fuel-modal-title">⛽ 주유 기록 추가</div>
     <div class="form-section">
       <label class="form-label">날짜</label>
       <input type="date" class="form-input" id="f-date">
@@ -588,7 +731,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <label class="form-label">메모</label>
       <input type="text" class="form-input" id="f-memo" placeholder="선택 입력">
     </div>
-    <button class="btn btn-primary" onclick="saveFuel()">저장하기</button>
+    <button class="btn btn-primary" onclick="saveFuel()" id="fuel-save-btn">저장하기</button>
     <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-fuel')">취소</button>
   </div>
 </div>
@@ -637,7 +780,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <label class="form-label">메모</label>
       <input type="text" class="form-input" id="r-memo" placeholder="선택 입력">
     </div>
-    <button class="btn btn-primary" onclick="saveRepair()">저장하기</button>
+    <button class="btn btn-primary" onclick="saveRepair()" id="repair-save-btn">저장하기</button>
     <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeModal('modal-repair')">취소</button>
   </div>
 </div>
@@ -745,6 +888,41 @@ function load() {
     save();
   }
   if (!db.activeCar && db.cars.length > 0) db.activeCar = db.cars[0].id;
+  // 테마 복원
+  if (db.theme === 'custom' && db.customPalette) {
+    const p = db.customPalette;
+    const root = document.documentElement;
+    root.style.setProperty('--bg', p.bg);
+    root.style.setProperty('--surface', p.surface);
+    root.style.setProperty('--surface2', blendColors(p.surface, p.bg, 0.5));
+    root.style.setProperty('--surface3', blendColors(p.surface, p.bg, 0.3));
+    root.style.setProperty('--border', p.border);
+    root.style.setProperty('--accent', p.accent);
+    root.style.setProperty('--accent2', p.accent2);
+    root.style.setProperty('--text', p.text);
+    root.style.setProperty('--text2', blendColors(p.text, p.bg, 0.5));
+    root.style.setProperty('--text3', blendColors(p.text, p.bg, 0.25));
+  } else if (db.theme === 'custom-image' && db.customBgImage) {
+    const opacity = db.customBgOpacity || 60;
+    const alpha = (parseInt(opacity)/100).toFixed(2);
+    document.body.style.backgroundImage = `url(${db.customBgImage})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    const root = document.documentElement;
+    root.style.setProperty('--surface',  `rgba(22,25,32,${alpha})`);
+    root.style.setProperty('--surface2', `rgba(30,34,48,${alpha})`);
+    root.style.setProperty('--surface3', `rgba(37,42,58,${alpha})`);
+    root.style.setProperty('--bg', `rgba(13,15,20,0.3)`);
+  } else if (db.theme) {
+    const t = THEMES.find(x => x.id === db.theme);
+    if (t) Object.entries(t.vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
+  }
+  // 폰트 크기 복원
+  if (db.fontSize) {
+    const sizes = { small:'12px', medium:'14px', large:'16px' };
+    document.body.style.fontSize = sizes[db.fontSize] || '14px';
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -755,6 +933,8 @@ let repairTab = 'repair';
 let chartMonthly, chartPie, chartKmpl;
 let editingCarId = null;
 let editingDriveId = null;
+let editingFuelId = null;
+let editingRepairId = null;
 
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -766,7 +946,7 @@ function navigate(page) {
 
   // FAB visibility
   const fab = document.getElementById('fab-btn');
-  fab.style.display = ['dash','car'].includes(page) ? 'none' : 'flex';
+  fab.style.display = ['dash','car','setting'].includes(page) ? 'none' : 'flex';
 }
 
 function renderPage(page) {
@@ -776,6 +956,7 @@ function renderPage(page) {
   if (page === 'drive')  renderDrive();
   if (page === 'stat')   renderStat();
   if (page === 'car')    renderCars();
+  if (page === 'setting') renderSetting();
 }
 
 // ══════════════════════════════════════════════
@@ -906,7 +1087,10 @@ function renderFuel() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div class="item-amount neg">-${fmt(f.cost)}원</div>
-        <button class="btn btn-danger btn-sm" onclick="deleteRecord('fuel','${f.id}')">삭제</button>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="editFuel('${f.id}')">✏️ 수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('fuel','${f.id}')">삭제</button>
+        </div>
       </div>
     </div>`).join('');
 }
@@ -941,7 +1125,10 @@ function renderRepair() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div class="item-amount neg">-${fmt(r.cost)}원</div>
-        <button class="btn btn-danger btn-sm" onclick="deleteRecord('repair','${r.id}')">삭제</button>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="editRepair('${r.id}')">✏️ 수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('repair','${r.id}')">삭제</button>
+        </div>
       </div>
     </div>`).join('')+`</div>`;
 }
@@ -1063,6 +1250,9 @@ function openAddModal() {
   if (currentPage==='drive')  { openDriveModal(); return; }
 }
 function openFuelModal() {
+  editingFuelId = null;
+  document.getElementById('fuel-modal-title').textContent = '⛽ 주유 기록 추가';
+  document.getElementById('fuel-save-btn').textContent = '저장하기';
   document.getElementById('f-date').value = today();
   document.getElementById('f-station').value='';
   document.getElementById('f-liter').value='';
@@ -1071,6 +1261,24 @@ function openFuelModal() {
   document.getElementById('f-odo').value='';
   document.getElementById('f-kmpl').value='';
   document.getElementById('f-memo').value='';
+  openModal('modal-fuel');
+}
+
+function editFuel(id) {
+  const f = db.fuels.find(x => x.id === id);
+  if (!f) return;
+  editingFuelId = id;
+  document.getElementById('fuel-modal-title').textContent = '⛽ 주유 기록 수정';
+  document.getElementById('fuel-save-btn').textContent = '수정 완료';
+  document.getElementById('f-date').value    = f.date || today();
+  document.getElementById('f-station').value = f.station || '';
+  document.getElementById('f-type').value    = f.type || '휘발유';
+  document.getElementById('f-liter').value   = f.liter || '';
+  document.getElementById('f-price').value   = f.price || '';
+  document.getElementById('f-cost').value    = f.cost || '';
+  document.getElementById('f-odo').value     = f.odo || '';
+  document.getElementById('f-kmpl').value    = f.kmpl || '';
+  document.getElementById('f-memo').value    = f.memo || '';
   openModal('modal-fuel');
 }
 // ── Waypoint helpers ──────────────────────────────────────────
@@ -1163,6 +1371,9 @@ function editDrive(id) {
   openModal('modal-drive');
 }
 function openRepairModal() {
+  editingRepairId = null;
+  document.getElementById('repair-modal-title').textContent = '🔧 정비 기록 추가';
+  document.getElementById('repair-save-btn').textContent = '저장하기';
   document.getElementById('r-date').value=today();
   document.getElementById('r-item').value='';
   document.getElementById('r-cat').value = repairTab;
@@ -1171,6 +1382,23 @@ function openRepairModal() {
   document.getElementById('r-odo').value='';
   document.getElementById('r-next-date').value='';
   document.getElementById('r-memo').value='';
+  openModal('modal-repair');
+}
+
+function editRepair(id) {
+  const r = db.repairs.find(x => x.id === id);
+  if (!r) return;
+  editingRepairId = id;
+  document.getElementById('repair-modal-title').textContent = '🔧 정비 기록 수정';
+  document.getElementById('repair-save-btn').textContent = '수정 완료';
+  document.getElementById('r-date').value      = r.date || today();
+  document.getElementById('r-item').value      = r.item || '';
+  document.getElementById('r-cat').value       = r.cat || 'repair';
+  document.getElementById('r-cost').value      = r.cost || '';
+  document.getElementById('r-shop').value      = r.shop || '';
+  document.getElementById('r-odo').value       = r.odo || '';
+  document.getElementById('r-next-date').value = r.nextDate || '';
+  document.getElementById('r-memo').value      = r.memo || '';
   openModal('modal-repair');
 }
 function pickEmoji(btn, emoji) {
@@ -1283,7 +1511,7 @@ function renderDrive() {
               <div class="drive-route-full">${routeHtml}</div>
               <div class="drive-meta">
                 <span class="drive-meta-item">📅 ${d.date}</span>
-                ${d.odoStart?`<span class="drive-meta-item">🔢 ${fmt(d.odoStart)}→${fmt(d.odoEnd)}km</span>`:''}
+                ${d.odoStart?`<span class="drive-meta-item">🔢 ${fmt(d.odoStart)}→${fmt(d.odoEnd)}km <span style="color:var(--accent);font-weight:700">(+${fmt(d.odoEnd-d.odoStart)}km)</span></span>`:''}
                 ${d.passenger?`<span class="drive-meta-item">👤 ${d.passenger}</span>`:''}
                 ${d.memo?`<span class="drive-meta-item">📝 ${d.memo}</span>`:''}
               </div>
@@ -1382,23 +1610,40 @@ function saveFuel() {
   const liter = parseFloat(document.getElementById('f-liter').value);
   const cost  = parseFloat(document.getElementById('f-cost').value)||parseFloat(document.getElementById('f-liter').value)*parseFloat(document.getElementById('f-price').value)||0;
   if (!date||!liter) { alert('날짜와 주유량은 필수입니다'); return; }
-  const rec = {
-    id: 'f'+Date.now(),
-    carId: db.activeCar,
-    date,
-    station: document.getElementById('f-station').value,
-    type: document.getElementById('f-type').value,
-    liter,
-    price: parseFloat(document.getElementById('f-price').value)||0,
-    cost: Math.round(cost),
-    odo: parseFloat(document.getElementById('f-odo').value)||0,
-    kmpl: parseFloat(document.getElementById('f-kmpl').value)||0,
-    memo: document.getElementById('f-memo').value,
-  };
-  db.fuels.push(rec);
-  // update car odo
-  const car = db.cars.find(c=>c.id===db.activeCar);
-  if (car && rec.odo > car.odo) { car.odo = rec.odo; }
+  if (editingFuelId) {
+    const rec = db.fuels.find(f => f.id === editingFuelId);
+    if (rec) {
+      rec.date    = date;
+      rec.station = document.getElementById('f-station').value;
+      rec.type    = document.getElementById('f-type').value;
+      rec.liter   = liter;
+      rec.price   = parseFloat(document.getElementById('f-price').value)||0;
+      rec.cost    = Math.round(cost);
+      rec.odo     = parseFloat(document.getElementById('f-odo').value)||0;
+      rec.kmpl    = parseFloat(document.getElementById('f-kmpl').value)||0;
+      rec.memo    = document.getElementById('f-memo').value;
+      const car = db.cars.find(c=>c.id===db.activeCar);
+      if (car && rec.odo > car.odo) car.odo = rec.odo;
+    }
+    editingFuelId = null;
+  } else {
+    const rec = {
+      id: 'f'+Date.now(),
+      carId: db.activeCar,
+      date,
+      station: document.getElementById('f-station').value,
+      type: document.getElementById('f-type').value,
+      liter,
+      price: parseFloat(document.getElementById('f-price').value)||0,
+      cost: Math.round(cost),
+      odo: parseFloat(document.getElementById('f-odo').value)||0,
+      kmpl: parseFloat(document.getElementById('f-kmpl').value)||0,
+      memo: document.getElementById('f-memo').value,
+    };
+    db.fuels.push(rec);
+    const car = db.cars.find(c=>c.id===db.activeCar);
+    if (car && rec.odo > car.odo) car.odo = rec.odo;
+  }
   save();
   closeModal('modal-fuel');
   renderPage(currentPage);
@@ -1409,17 +1654,32 @@ function saveRepair() {
   const item = document.getElementById('r-item').value;
   const cost = parseFloat(document.getElementById('r-cost').value)||0;
   if (!date||!item) { alert('날짜와 항목은 필수입니다'); return; }
-  db.repairs.push({
-    id: 'r'+Date.now(),
-    carId: db.activeCar,
-    date, item,
-    cat: document.getElementById('r-cat').value,
-    cost,
-    shop: document.getElementById('r-shop').value,
-    odo: parseFloat(document.getElementById('r-odo').value)||0,
-    nextDate: document.getElementById('r-next-date').value,
-    memo: document.getElementById('r-memo').value,
-  });
+  if (editingRepairId) {
+    const rec = db.repairs.find(r => r.id === editingRepairId);
+    if (rec) {
+      rec.date     = date;
+      rec.item     = item;
+      rec.cat      = document.getElementById('r-cat').value;
+      rec.cost     = cost;
+      rec.shop     = document.getElementById('r-shop').value;
+      rec.odo      = parseFloat(document.getElementById('r-odo').value)||0;
+      rec.nextDate = document.getElementById('r-next-date').value;
+      rec.memo     = document.getElementById('r-memo').value;
+    }
+    editingRepairId = null;
+  } else {
+    db.repairs.push({
+      id: 'r'+Date.now(),
+      carId: db.activeCar,
+      date, item,
+      cat: document.getElementById('r-cat').value,
+      cost,
+      shop: document.getElementById('r-shop').value,
+      odo: parseFloat(document.getElementById('r-odo').value)||0,
+      nextDate: document.getElementById('r-next-date').value,
+      memo: document.getElementById('r-memo').value,
+    });
+  }
   save();
   closeModal('modal-repair');
   renderPage(currentPage);
@@ -1480,11 +1740,408 @@ function deleteCar(id) {
   save(); renderCars();
 }
 
+
+
+// ══════════════════════════════════════════════
+//  CUSTOM THEME
+// ══════════════════════════════════════════════
+let customTab = 'palette';
+
+function switchCustomTab(tab) {
+  customTab = tab;
+  document.getElementById('custom-palette-tab').style.display = tab === 'palette' ? 'block' : 'none';
+  document.getElementById('custom-image-tab').style.display   = tab === 'image'   ? 'block' : 'none';
+  document.querySelectorAll('#custom-tabs .tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0&&tab==='palette')||(i===1&&tab==='image'));
+  });
+}
+
+function syncColorHex(colorId, hexId) {
+  // hex 입력 → color picker 동기화
+  const hex = document.getElementById(hexId).value;
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    document.getElementById(colorId).value = hex;
+    updatePalettePreview();
+  }
+}
+
+function updatePalettePreview() {
+  const bg      = document.getElementById('cp-bg').value;
+  const surface = document.getElementById('cp-surface').value;
+  const accent  = document.getElementById('cp-accent').value;
+  const text    = document.getElementById('cp-text').value;
+
+  // hex input 동기화
+  document.getElementById('cp-bg-hex').value      = bg;
+  document.getElementById('cp-surface-hex').value = surface;
+  document.getElementById('cp-accent-hex').value  = accent;
+  document.getElementById('cp-text-hex').value    = text;
+
+  const box = document.getElementById('palette-preview-box');
+  if (box) {
+    box.style.background = surface;
+    box.style.border = `1px solid ${document.getElementById('cp-border').value}`;
+    document.getElementById('pv-title').style.color = text;
+    document.getElementById('pv-sub').style.color   = accent;
+    document.getElementById('pv-bar').style.background = accent;
+    document.getElementById('palette-preview').style.background = bg;
+  }
+}
+
+// color picker 변경 → hex input 동기화
+['cp-bg','cp-surface','cp-accent','cp-text','cp-border','cp-accent2'].forEach(id => {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      const hexEl = document.getElementById(id + '-hex');
+      if (hexEl) hexEl.value = el.value;
+      updatePalettePreview();
+    });
+  }, 500);
+});
+
+function applyCustomPalette() {
+  const bg      = document.getElementById('cp-bg').value;
+  const surface = document.getElementById('cp-surface').value;
+  const accent  = document.getElementById('cp-accent').value;
+  const text    = document.getElementById('cp-text').value;
+  const border  = document.getElementById('cp-border').value;
+  const accent2 = document.getElementById('cp-accent2').value;
+
+  // 밝기 계산으로 text2, text3 자동 생성
+  const isDark = isColorDark(bg);
+
+  const root = document.documentElement;
+  root.style.setProperty('--bg', bg);
+  root.style.setProperty('--surface', surface);
+  root.style.setProperty('--surface2', blendColors(surface, bg, 0.5));
+  root.style.setProperty('--surface3', blendColors(surface, bg, 0.3));
+  root.style.setProperty('--border', border);
+  root.style.setProperty('--accent', accent);
+  root.style.setProperty('--accent2', accent2);
+  root.style.setProperty('--text', text);
+  root.style.setProperty('--text2', blendColors(text, bg, 0.5));
+  root.style.setProperty('--text3', blendColors(text, bg, 0.25));
+
+  // 배경 이미지 제거
+  document.body.style.backgroundImage = '';
+  document.getElementById('app').style.backgroundImage = '';
+
+  db.theme = 'custom';
+  db.customPalette = { bg, surface, accent, text, border, accent2 };
+  save();
+  renderSetting();
+  alert('✅ 커스텀 팔레트가 적용되었습니다!');
+}
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return (r*0.299 + g*0.587 + b*0.114) < 128;
+}
+
+function blendColors(hex1, hex2, ratio) {
+  const r1=parseInt(hex1.slice(1,3),16), g1=parseInt(hex1.slice(3,5),16), b1=parseInt(hex1.slice(5,7),16);
+  const r2=parseInt(hex2.slice(1,3),16), g2=parseInt(hex2.slice(3,5),16), b2=parseInt(hex2.slice(5,7),16);
+  const r=Math.round(r1*ratio+r2*(1-ratio));
+  const g=Math.round(g1*ratio+g2*(1-ratio));
+  const b=Math.round(b1*ratio+b2*(1-ratio));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ── 배경 이미지 ──────────────────────────────
+function handleBgImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  loadBgImageFile(file);
+}
+
+function handleBgImageDrop(event) {
+  event.preventDefault();
+  document.getElementById('img-drop-zone').style.borderColor = 'var(--border)';
+  const file = event.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  loadBgImageFile(file);
+}
+
+function loadBgImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    // 미리보기
+    document.getElementById('bg-preview-img').src = dataUrl;
+    document.getElementById('bg-preview-wrap').style.display = 'block';
+    document.getElementById('img-drop-zone').style.display = 'none';
+    // 임시 저장
+    window._pendingBgImage = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateBgOpacity(val) {
+  document.getElementById('bg-opacity-val').textContent = val + '%';
+}
+
+function applyBgImage() {
+  const dataUrl = window._pendingBgImage || db.customBgImage;
+  if (!dataUrl) return;
+  const opacity = document.getElementById('bg-opacity').value;
+  const alpha = (parseInt(opacity) / 100).toFixed(2);
+
+  // 배경 이미지 적용
+  document.body.style.backgroundImage = `url(${dataUrl})`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundAttachment = 'fixed';
+
+  // 카드/서피스에 반투명 오버레이
+  const root = document.documentElement;
+  root.style.setProperty('--surface',  `rgba(22,25,32,${alpha})`);
+  root.style.setProperty('--surface2', `rgba(30,34,48,${alpha})`);
+  root.style.setProperty('--surface3', `rgba(37,42,58,${alpha})`);
+  root.style.setProperty('--bg',       `rgba(13,15,20,0.3)`);
+
+  db.theme = 'custom-image';
+  db.customBgImage = dataUrl;
+  db.customBgOpacity = opacity;
+  save();
+  renderSetting();
+  alert('✅ 배경 이미지가 적용되었습니다!');
+}
+
+function removeBgImage() {
+  document.body.style.backgroundImage = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundPosition = '';
+  document.body.style.backgroundAttachment = '';
+  window._pendingBgImage = null;
+  db.customBgImage = null;
+  db.theme = 'dark-blue';
+  // 기본 테마 복원
+  applyTheme('dark-blue');
+  document.getElementById('bg-preview-wrap').style.display = 'none';
+  document.getElementById('img-drop-zone').style.display = 'block';
+  save();
+  renderSetting();
+}
+
+// ══════════════════════════════════════════════
+//  THEMES
+// ══════════════════════════════════════════════
+const THEMES = [
+  {
+    id: 'dark-blue',
+    name: '다크 블루',
+    desc: '기본 테마',
+    preview: ['#0d0f14','#4f8ef7'],
+    vars: {
+      '--bg':'#0d0f14','--surface':'#161920','--surface2':'#1e2230','--surface3':'#252a3a',
+      '--border':'#2a3048','--accent':'#4f8ef7','--accent2':'#7c6af7',
+      '--text':'#e8eaf0','--text2':'#8b92a8','--text3':'#4a5270',
+    }
+  },
+  {
+    id: 'midnight',
+    name: '미드나잇',
+    desc: '순수 블랙',
+    preview: ['#000000','#6366f1'],
+    vars: {
+      '--bg':'#000000','--surface':'#0a0a0a','--surface2':'#141414','--surface3':'#1a1a1a',
+      '--border':'#222222','--accent':'#6366f1','--accent2':'#8b5cf6',
+      '--text':'#ffffff','--text2':'#888888','--text3':'#444444',
+    }
+  },
+  {
+    id: 'dark-green',
+    name: '다크 그린',
+    desc: '숲 속 느낌',
+    preview: ['#0a1628','#34d399'],
+    vars: {
+      '--bg':'#0a1628','--surface':'#0f2040','--surface2':'#152848','--surface3':'#1a3258',
+      '--border':'#1e3a5f','--accent':'#34d399','--accent2':'#10b981',
+      '--text':'#e0f2ef','--text2':'#7fb8a8','--text3':'#3d7a6a',
+    }
+  },
+  {
+    id: 'dark-red',
+    name: '다크 레드',
+    desc: '강렬한 느낌',
+    preview: ['#1a0a0a','#f87171'],
+    vars: {
+      '--bg':'#1a0a0a','--surface':'#2a1010','--surface2':'#321818','--surface3':'#3a2020',
+      '--border':'#4a2828','--accent':'#f87171','--accent2':'#fb923c',
+      '--text':'#f0e0e0','--text2':'#a88888','--text3':'#6a4848',
+    }
+  },
+  {
+    id: 'gray-dark',
+    name: '슬레이트',
+    desc: '모던 그레이',
+    preview: ['#0f172a','#94a3b8'],
+    vars: {
+      '--bg':'#0f172a','--surface':'#1e293b','--surface2':'#263346','--surface3':'#2d3d52',
+      '--border':'#334155','--accent':'#94a3b8','--accent2':'#7c8fa8',
+      '--text':'#f1f5f9','--text2':'#94a3b8','--text3':'#475569',
+    }
+  },
+  {
+    id: 'soft-light',
+    name: '소프트 라이트',
+    desc: '밝은 회색',
+    preview: ['#f1f5f9','#4f8ef7'],
+    vars: {
+      '--bg':'#f1f5f9','--surface':'#ffffff','--surface2':'#e8eef5','--surface3':'#dce6f0',
+      '--border':'#cbd5e1','--accent':'#4f8ef7','--accent2':'#7c6af7',
+      '--text':'#1e293b','--text2':'#64748b','--text3':'#94a3b8',
+    }
+  },
+  {
+    id: 'warm-light',
+    name: '웜 라이트',
+    desc: '따뜻한 화이트',
+    preview: ['#fffbf5','#f59e0b'],
+    vars: {
+      '--bg':'#fffbf5','--surface':'#ffffff','--surface2':'#fef3e2','--surface3':'#fde8c8',
+      '--border':'#fed7aa','--accent':'#f59e0b','--accent2':'#ef4444',
+      '--text':'#1c1917','--text2':'#78716c','--text3':'#a8a29e',
+    }
+  },
+  {
+    id: 'pure-white',
+    name: '퓨어 화이트',
+    desc: '가장 밝은 테마',
+    preview: ['#ffffff','#2563eb'],
+    vars: {
+      '--bg':'#ffffff','--surface':'#f8fafc','--surface2':'#f1f5f9','--surface3':'#e2e8f0',
+      '--border':'#e2e8f0','--accent':'#2563eb','--accent2':'#7c3aed',
+      '--text':'#0f172a','--text2':'#475569','--text3':'#94a3b8',
+    }
+  },
+];
+
+function applyTheme(id) {
+  const theme = THEMES.find(t => t.id === id);
+  if (!theme) return;
+  const root = document.documentElement;
+  Object.entries(theme.vars).forEach(([k,v]) => root.style.setProperty(k, v));
+  // theme-color 메타 업데이트
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', theme.vars['--bg']);
+  db.theme = id;
+  save();
+  renderSetting();
+}
+
+function setFontSize(size) {
+  const sizes = { small: '12px', medium: '14px', large: '16px' };
+  document.body.style.fontSize = sizes[size] || '14px';
+  db.fontSize = size;
+  save();
+  // 버튼 활성화 표시
+  document.querySelectorAll('#font-size-btns .btn').forEach(b => {
+    b.classList.toggle('btn-primary', b.dataset.size === size);
+    b.classList.toggle('btn-ghost', b.dataset.size !== size);
+  });
+}
+
+function renderSetting() {
+  const grid = document.getElementById('theme-grid');
+  if (!grid) return;
+  const current = db.theme || 'dark-blue';
+  // 커스텀 팔레트 입력값 복원
+  if (db.customPalette) {
+    const p = db.customPalette;
+    ['bg','surface','accent','text','border','accent2'].forEach(k => {
+      const el = document.getElementById(`cp-${k}`);
+      const hexEl = document.getElementById(`cp-${k}-hex`);
+      if (el && p[k]) { el.value = p[k]; }
+      if (hexEl && p[k]) { hexEl.value = p[k]; }
+    });
+    updatePalettePreview();
+  }
+  // 커스텀 이미지 복원
+  if (db.customBgImage) {
+    document.getElementById('bg-preview-img').src = db.customBgImage;
+    document.getElementById('bg-preview-wrap').style.display = 'block';
+    document.getElementById('img-drop-zone').style.display = 'none';
+    if (db.customBgOpacity) {
+      document.getElementById('bg-opacity').value = db.customBgOpacity;
+      document.getElementById('bg-opacity-val').textContent = db.customBgOpacity + '%';
+    }
+  }
+  grid.innerHTML = THEMES.map(t => `
+    <div onclick="applyTheme('${t.id}')" style="
+      cursor:pointer; border-radius:14px; padding:12px;
+      border:2px solid ${t.id===current ? 'var(--accent)' : 'var(--border)'};
+      background:${t.id===current ? 'rgba(79,142,247,.1)' : 'var(--surface2)'};
+      transition:all .2s;
+    ">
+      <div style="display:flex;gap:5px;margin-bottom:8px">
+        <div style="width:28px;height:28px;border-radius:8px;background:${t.preview[0]};border:1px solid var(--border)"></div>
+        <div style="width:28px;height:28px;border-radius:8px;background:${t.preview[1]}"></div>
+        ${t.id===current ? '<div style="margin-left:auto;font-size:14px">✅</div>' : ''}
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text)">${t.name}</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">${t.desc}</div>
+    </div>
+  `).join('');
+
+  // 폰트 크기 버튼 상태
+  const currentSize = db.fontSize || 'medium';
+  const fontBtns = document.getElementById('font-size-btns');
+  if (fontBtns) {
+    fontBtns.querySelectorAll('.btn').forEach(b => {
+      b.classList.toggle('btn-primary', b.dataset.size === currentSize);
+      b.classList.toggle('btn-ghost', b.dataset.size !== currentSize);
+    });
+  }
+}
+
+function saveSettingAndGoHome() {
+  save();
+  // 저장 완료 토스트 메시지
+  const toast = document.createElement('div');
+  toast.textContent = '✅ 설정이 저장되었습니다';
+  toast.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:white; padding:12px 24px;
+    border-radius:24px; font-size:13px; font-weight:600;
+    box-shadow:0 4px 20px rgba(0,0,0,.3); z-index:9999;
+    animation:fadeUp .3s ease;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity .3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+  // 홈으로 이동
+  setTimeout(() => navigate('dash'), 400);
+}
+
+function resetData() {
+  if (!confirm('모든 데이터가 삭제됩니다. 계속할까요?')) return;
+  const theme = db.theme;
+  const fontSize = db.fontSize;
+  localStorage.removeItem('chaegyebu_v1');
+  load();
+  db.theme = theme;
+  db.fontSize = fontSize;
+  save();
+  navigate('dash');
+}
+
 // ══════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════
 function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
-function today() { return new Date().toISOString().split('T')[0]; }
+function today() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 // ══════════════════════════════════════════════
 //  INIT
